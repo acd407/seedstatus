@@ -1,0 +1,115 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.ko
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Static libraries
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# CMake build directory
+build/
+*/build/
+*/*/build/
+*/*/*/build/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+*.cmake
+Makefile
+*.ninja
+.ninja_deps
+.ninja_log
+
+# IDE specific files
+.vscode/
+.idea/
+*.user
+*.suo
+*.ncb
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.VC.opendb
+
+# Autotools files
+autom4te.cache/
+aclocal.m4
+compile
+config.guess
+config.sub
+configure
+depcomp
+install-sh
+libtool
+ltmain.sh
+m4/
+missing
+Makefile.in
+stamp-h1
+
+# Test output
+*.trs
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+
+# Debug files
+*.elf
+*.map
+*.dbg
+
+# Qt Creator files
+*.autosave
+
+# Mac OS X
+.DS_Store
+._*
+
+# Visual Studio Code
+.history/
+
+# Vim swap files
+*.swp
+*.swo
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# CLion
+.idea/
+cmake-build-*/
+
+# Eclipse
+.project
+.cproject
+.settings/
+
+# VS Code
+.vscode/
