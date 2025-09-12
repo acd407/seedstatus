@@ -113,3 +113,5 @@ cmake-build-*/
 
 # VS Code
 .vscode/
+.cache
+seedstatus.log
