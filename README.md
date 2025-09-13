@@ -1,11 +1,9 @@
 # SeedStatus
 
-<span style="white-space: nowrap;">
 [![License](https://img.shields.io/github/license/acd407/seedstatus)](LICENSE)
 [![C++](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://isocpp.org/)
 [![CMake](https://img.shields.io/badge/CMake-3.20+-green.svg)](https://cmake.org/)
 [![Linux](https://img.shields.io/badge/Linux-compatible-brightgreen.svg)](https://www.linux.org/)
-</span>
 
 ## 项目概述
 
