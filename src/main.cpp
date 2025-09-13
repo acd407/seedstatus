@@ -2,26 +2,25 @@
 #include <iostream>
 #include <csignal>
 #include <cstdlib>
-#include <memory>
+#include <functional>
 
 namespace {
-volatile bool g_running = true;
-System *g_system = nullptr;
+// 全局信号处理函数
+static std::function<void(int)> g_signalHandler;
 
-// 信号处理函数
-void signalHandler(int signal) {
-    std::cout << "\nReceived signal " << signal << ", shutting down..."
-              << std::endl;
-    g_running = false;
-    if (g_system) {
-        g_system->stop();
+// 信号处理函数包装器
+static void signalHandlerWrapper(int signal) {
+    if (g_signalHandler) {
+        g_signalHandler(signal);
     }
 }
 
 // 设置信号处理
-void setupSignalHandlers() {
+static void setupSignalHandlers(const std::function<void(int)> &handler) {
+    g_signalHandler = handler;
+
     struct sigaction sa;
-    sa.sa_handler = signalHandler;
+    sa.sa_handler = signalHandlerWrapper;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
 
@@ -37,12 +36,28 @@ void setupSignalHandlers() {
 
 int main() {
     try {
-        // 设置信号处理
-        setupSignalHandlers();
-
         // 直接创建System实例
         System system;
-        g_system = &system;
+
+        // 设置信号处理，使用lambda捕获system对象
+        setupSignalHandlers([&system](int signal) {
+            const char *signalName;
+            switch (signal) {
+            case SIGINT:
+                signalName = "SIGINT";
+                break;
+            case SIGTERM:
+                signalName = "SIGTERM";
+                break;
+            default:
+                signalName = "UNKNOWN";
+                break;
+            }
+
+            std::cerr << "\nReceived signal " << signalName << " (" << signal
+                      << "), shutting down..." << std::endl;
+            system.stop();
+        });
 
         // 初始化系统
         if (!system.initialize()) {

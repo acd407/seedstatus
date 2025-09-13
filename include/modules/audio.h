@@ -3,6 +3,7 @@
 #include <alsa/asoundlib.h>
 #include <memory>
 #include <string>
+#include <optional>
 
 // 音频模块基类 - 提供ALSA混音器的通用功能
 class AudioModule : public Module {
@@ -37,9 +38,6 @@ protected:
     // 格式化输出字符串（子类可以重写）
     virtual std::string formatOutput(int64_t volume);
     
-    // 重新加载混音器
-    void reloadMixer();
-    
     // 处理ALSA混音器事件
     void handleMixerEvents();
     
@@ -55,7 +53,11 @@ protected:
     // ALSA混音器文件描述符
     int mixer_fd_ = -1;
     
+    // 现代化的ALSA混音器包装器
+    std::unique_ptr<class AlsaMixerWrapper> mixer_wrapper_;
+    
 private:
+    
     // 初始化ALSA混音器
     bool initializeMixer();
     
