@@ -4,7 +4,6 @@
 #include <sys/epoll.h>
 #include <vector>
 #include <memory>
-#include <mutex>
 #include <unistd.h>
 
 // System类是应用程序的核心，管理epoll事件循环
@@ -17,8 +16,7 @@ public:
     System(const System&) = delete;
     System& operator=(const System&) = delete;
     
-    // 获取System实例的引用（线程安全的单例）
-    static System& getInstance();
+
     
     // 初始化系统
     bool initialize();
@@ -45,16 +43,12 @@ public:
     void stop();
     
 private:
-    // System实例指针
-    static System* instance_;
-    static std::mutex instance_mutex_;
-    static std::once_flag init_flag_;
 
 private:
     int epoll_fd_ = -1;
     ModuleManager module_manager_;
     Timer timer_;
-    std::atomic<bool> running_{false};
+    volatile bool running_ = false;
     
     // 创建epoll实例
     bool createEpoll();

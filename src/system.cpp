@@ -5,25 +5,14 @@
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
-#include <mutex>
 
-// 初始化静态成员
-System *System::instance_ = nullptr;
-std::mutex System::instance_mutex_;
-std::once_flag System::init_flag_;
+
 
 System::System() = default;
 
 System::~System() = default;
 
-// 线程安全的单例实现
-System& System::getInstance() {
-    std::call_once(init_flag_, [] {
-        static System instance;
-        instance_ = &instance;
-    });
-    return *instance_;
-}
+
 
 bool System::initialize() {
     try {
@@ -191,7 +180,7 @@ bool System::createEpoll() {
 
 void System::initializeModules() {
     // 添加Stdin模块，用于处理点击事件
-    addModule(std::make_shared<StdinModule>());
+    addModule(std::make_shared<StdinModule>(this));
     // 按照指定顺序初始化模块
     addModule(std::make_shared<BatteryModule>()); // Battery Status
     addModule(std::make_shared<BacklightModule>()); // Backlight Control

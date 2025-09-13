@@ -239,7 +239,7 @@ void NetworkModule::formatWirelessOutput(std::ostringstream& output, const std::
     
     // 采用 level 方法判断出问题的时候，就用 link 方法
     if (idx == 0 || idx >= icons.size()) {
-        idx = icons.size() * link / 101;
+        idx = icons.size() * static_cast<uint64_t>(link) / 101;
     }
     
     idx = std::min(idx, icons.size() - 1);

@@ -226,8 +226,8 @@ std::string BatteryModule::formatTime(int64_t seconds) {
         return "";
     }
     
-    uint64_t hours = seconds / 3600;
-    uint64_t minutes = (seconds - hours * 3600) / 60;
+    uint64_t hours = static_cast<uint64_t>(seconds) / 3600;
+    uint64_t minutes = (static_cast<uint64_t>(seconds) - hours * 3600) / 60;
     
     std::ostringstream oss;
     oss << "(" << hours << ":" << std::setw(2) << std::setfill('0') << minutes << ")";

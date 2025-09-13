@@ -96,7 +96,7 @@ void MemoryModule::getUsage(uint64_t& used, double& percent) {
     }
     
     used = total - available;
-    percent = static_cast<double>(used) / total;
+    percent = static_cast<double>(used) / static_cast<double>(total);
     used *= 1024; // 转换为字节
 }
 
@@ -115,11 +115,11 @@ std::string MemoryModule::formatStorageUnits(double bytes) {
     result << std::fixed;
     
     if (bytes >= 100.0) {
-        result << std::setprecision(0) << " " << bytes << units[unit_idx];
+        result << std::setprecision(0) << " " << bytes << units[static_cast<size_t>(unit_idx)];
     } else if (bytes >= 10.0) {
-        result << std::setprecision(1) << std::setw(4) << bytes << units[unit_idx];
+        result << std::setprecision(1) << std::setw(4) << bytes << units[static_cast<size_t>(unit_idx)];
     } else {
-        result << std::setprecision(2) << std::setw(4) << bytes << units[unit_idx];
+        result << std::setprecision(2) << std::setw(4) << bytes << units[static_cast<size_t>(unit_idx)];
     }
     
     return result.str();

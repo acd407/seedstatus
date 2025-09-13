@@ -2,8 +2,6 @@
 #include "module.h"
 #include <vector>
 #include <sys/timerfd.h>
-#include <atomic>
-#include <mutex>
 #include <memory>
 #include <unistd.h>
 
@@ -50,10 +48,9 @@ public:
 
 private:
     int timer_fd_ = -1;
-    std::atomic<uint64_t> counter_{0};
+    volatile uint64_t counter_ = 0;
     int epoll_fd_ = -1;
     std::vector<std::shared_ptr<Module>> interval_modules_;
-    mutable std::mutex modules_mutex_;
     
     // 创建定时器文件描述符
     int createTimerFd();

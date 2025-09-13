@@ -3,7 +3,6 @@
 #include <stdexcept>
 #include <iostream>
 #include <fstream>
-#include <mutex>
 #include <algorithm>
 
 using json = nlohmann::json;
@@ -39,12 +38,10 @@ std::string Module::getName() const {
 }
 
 std::string Module::getOutput() const {
-    std::lock_guard<std::mutex> lock(output_mutex_);
     return output_;
 }
 
 void Module::setOutput(const std::string &output, Color color) {
-    std::lock_guard<std::mutex> lock(output_mutex_);
     output_ = output;
     color_ = getColorString(color);
     updateLastUpdateTime();
@@ -93,7 +90,6 @@ void Module::markForDeletion() {
 
 std::string Module::toJson() const {
     try {
-        std::lock_guard<std::mutex> lock(output_mutex_);
         json j;
         j["name"] = name_;
         j["separator"] = false;
@@ -152,17 +148,14 @@ void ModuleManager::addModule(std::shared_ptr<Module> module) {
         throw std::invalid_argument("Module cannot be null");
     }
 
-    std::lock_guard<std::mutex> lock(modules_mutex_);
     modules_.push_back(module);
 }
 
 size_t ModuleManager::getModuleCount() const {
-    std::lock_guard<std::mutex> lock(modules_mutex_);
     return modules_.size();
 }
 
 std::shared_ptr<Module> ModuleManager::getModule(size_t index) const {
-    std::lock_guard<std::mutex> lock(modules_mutex_);
     if (index >= modules_.size()) {
         throw std::out_of_range("Module index out of range");
     }
@@ -171,7 +164,6 @@ std::shared_ptr<Module> ModuleManager::getModule(size_t index) const {
 
 std::shared_ptr<Module>
 ModuleManager::getModuleByName(const std::string &name) const {
-    std::lock_guard<std::mutex> lock(modules_mutex_);
     for (const auto &module : modules_) {
         if (module->getName() == name) {
             return module;
@@ -181,7 +173,6 @@ ModuleManager::getModuleByName(const std::string &name) const {
 }
 
 void ModuleManager::removeMarkedModules() {
-    std::lock_guard<std::mutex> lock(modules_mutex_);
     auto it = std::remove_if(
         modules_.begin(), modules_.end(),
         [](const std::shared_ptr<Module> &module) {
@@ -197,7 +188,6 @@ const std::vector<std::shared_ptr<Module>> &ModuleManager::getModules() const {
 
 void ModuleManager::outputModules() const {
     try {
-        std::lock_guard<std::mutex> lock(modules_mutex_);
         std::cout << '[';
         bool first = true;
 

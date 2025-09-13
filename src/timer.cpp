@@ -56,7 +56,6 @@ void Timer::addIntervalModule(std::shared_ptr<Module> module) {
         throw std::invalid_argument("Module cannot be null");
     }
     
-    std::lock_guard<std::mutex> lock(modules_mutex_);
     interval_modules_.push_back(module);
 }
 
@@ -65,7 +64,6 @@ void Timer::removeModule(const std::shared_ptr<Module>& module) {
         return;
     }
     
-    std::lock_guard<std::mutex> lock(modules_mutex_);
     auto it = std::remove(interval_modules_.begin(), interval_modules_.end(), module);
     interval_modules_.erase(it, interval_modules_.end());
 }
@@ -75,11 +73,10 @@ void Timer::handleTimerEvent() {
         // 读取定时器事件
         uint64_t expirations = readTimerFd();
         if (expirations > 0) {
-            counter_.fetch_add(expirations);
-            const uint64_t current_counter = counter_.load();
+            counter_ += expirations;
+            const uint64_t current_counter = counter_;
 
             // 更新所有需要按时间间隔更新的模块
-            std::lock_guard<std::mutex> lock(modules_mutex_);
             for (const auto &module : interval_modules_) {
                 if (!module) continue;
                 
@@ -109,7 +106,7 @@ bool Timer::shouldUpdate(uint64_t counter, std::shared_ptr<Module> module) {
 }
 
 uint64_t Timer::getCounter() const {
-    return counter_.load();
+    return counter_;
 }
 
 bool Timer::setInterval(uint64_t seconds) {
@@ -118,9 +115,9 @@ bool Timer::setInterval(uint64_t seconds) {
     }
     
     struct itimerspec new_value{};
-    new_value.it_value.tv_sec = seconds;
+    new_value.it_value.tv_sec = static_cast<time_t>(seconds);
     new_value.it_value.tv_nsec = 0;
-    new_value.it_interval.tv_sec = seconds;
+    new_value.it_interval.tv_sec = static_cast<time_t>(seconds);
     new_value.it_interval.tv_nsec = 0;
 
     if (timerfd_settime(timer_fd_wrapper_.get(), 0, &new_value, nullptr) == -1) {

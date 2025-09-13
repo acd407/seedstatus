@@ -1,11 +1,12 @@
 #pragma once
 #include "module.h"
 #include <unistd.h>
+#include <system.h>
 
 // Stdin模块 - 处理来自标准输入的事件（如点击事件）
 class StdinModule : public Module {
 public:
-    StdinModule();
+    StdinModule(System* system = nullptr);
     ~StdinModule();
     
     // 更新模块状态
@@ -24,5 +25,6 @@ private:
     // 读取并解析输入
     void parseInput();
     
-
+    // System实例指针
+    System* system_;
 };

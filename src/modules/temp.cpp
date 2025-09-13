@@ -78,7 +78,7 @@ std::string TempModule::getTemperatureIcon(double temp) const {
     // 根据温度选择图标（改进算法，更合理地分布温度区间）
     // 假设温度范围为0-100°C，将其平均分为5个区间
     double normalizedTemp = std::clamp(temp, 0.0, 100.0);
-    size_t idx = static_cast<size_t>((normalizedTemp / 100.0) * icons.size());
+    size_t idx = static_cast<size_t>((normalizedTemp / 100.0) * static_cast<double>(icons.size()));
 
     // 确保索引在有效范围内（使用clamp函数）
     idx = std::clamp(idx, size_t(0), icons.size() - 1);

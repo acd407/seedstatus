@@ -8,7 +8,7 @@
 // 定义缓冲区大小
 #define BUF_SIZE 4096
 
-StdinModule::StdinModule() : Module("stdin") {
+StdinModule::StdinModule(System* system) : Module("stdin"), system_(system) {
     // Stdin模块不需要定时更新，只在有输入时更新
     setInterval(0);
 }
@@ -56,7 +56,15 @@ void StdinModule::parseInput() {
     ssize_t n = read(STDIN_FILENO, input, BUF_SIZE - 1);
 
     if (n == -1) {
-        if (errno != EAGAIN && errno != EWOULDBLOCK) {
+        // 检查是否为非阻塞IO的正常返回
+        if (errno != EAGAIN) {
+        #if EWOULDBLOCK != EAGAIN
+            if (errno != EWOULDBLOCK) {
+        #endif
+            // 真正的错误处理
+        #if EWOULDBLOCK != EAGAIN
+            }
+        #endif
         }
         return;
     }
@@ -87,8 +95,11 @@ void StdinModule::parseInput() {
             std::string module_name = json["name"];
             uint64_t button = json["button"];
 
-            // 获取System实例
-            System &system = System::getInstance();
+            // 使用System实例指针
+            if (!system_) {
+                return;
+            }
+            System &system = *system_;
             // 获取模块管理器
             ModuleManager &module_manager = system.getModuleManager();
 

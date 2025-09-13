@@ -2,18 +2,20 @@
 #include <iostream>
 #include <csignal>
 #include <cstdlib>
-#include <atomic>
 #include <memory>
 
 namespace {
-std::atomic<bool> g_running{true};
+volatile bool g_running = true;
+System *g_system = nullptr;
 
 // 信号处理函数
 void signalHandler(int signal) {
     std::cout << "\nReceived signal " << signal << ", shutting down..."
               << std::endl;
     g_running = false;
-    System::getInstance().stop();
+    if (g_system) {
+        g_system->stop();
+    }
 }
 
 // 设置信号处理
@@ -38,8 +40,9 @@ int main() {
         // 设置信号处理
         setupSignalHandlers();
 
-        // 获取系统实例
-        auto &system = System::getInstance();
+        // 直接创建System实例
+        System system;
+        g_system = &system;
 
         // 初始化系统
         if (!system.initialize()) {

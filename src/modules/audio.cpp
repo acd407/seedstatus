@@ -18,8 +18,11 @@ const std::vector<std::string> MicrophoneModule::microphone_icons_ = {
 };
 
 // AudioModule基类实现
-AudioModule::AudioModule(const std::string& name, const std::string& element_name)
-    : Module(name), mixer_handle_(nullptr, &snd_mixer_close), element_name_(element_name) {
+AudioModule::AudioModule(
+    const std::string &name, const std::string &element_name
+)
+    : Module(name), mixer_handle_(nullptr, &snd_mixer_close),
+      element_name_(element_name) {
     // 音频模块默认不基于时间间隔更新，而是基于ALSA事件
     setInterval(0);
 }
@@ -36,16 +39,18 @@ void AudioModule::init() {
         setInterval(1);
         return;
     }
-    
+
     // 获取ALSA混音器的文件描述符
     if (mixer_handle_) {
         struct pollfd pfd;
         if (snd_mixer_poll_descriptors(mixer_handle_.get(), &pfd, 1) == 1) {
             mixer_fd_ = pfd.fd;
             setFd(mixer_fd_); // 设置文件描述符，System会将其添加到epoll
-            std::cerr << "AudioModule " << getName() << " registered fd " << mixer_fd_ << " for epoll" << std::endl;
+            std::cerr << "AudioModule " << getName() << " registered fd "
+                      << mixer_fd_ << " for epoll" << std::endl;
         } else {
-            std::cerr << "Failed to get poll descriptors for " << getName() << std::endl;
+            std::cerr << "Failed to get poll descriptors for " << getName()
+                      << std::endl;
         }
     }
 }
@@ -60,13 +65,13 @@ void AudioModule::update() {
                 return;
             }
         }
-        
+
         // 处理ALSA混音器事件
         handleMixerEvents();
-        
+
         // 获取音量值
         int64_t volume = getVolume();
-        
+
         if (volume == -2) {
             // 设备未激活，需要重新加载
             cleanupMixer();
@@ -81,7 +86,7 @@ void AudioModule::update() {
             setOutput(output, Color::IDLE);
             setInterval(0); // 取消时间间隔更新
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::cerr << "AudioModule update error: " << e.what() << std::endl;
         setOutput("󰝟", Color::DEACTIVE);
         setInterval(1); // 设置重试间隔
@@ -89,13 +94,8 @@ void AudioModule::update() {
 }
 
 void AudioModule::handleClick(uint64_t button) {
-    int64_t previous_volume = -3; // 初始化为无效值
-    
-    // 获取操作前的音量状态
-    if (button != 2) { // 中键点击不需要比较音量变化
-        previous_volume = getVolume();
-    }
-    
+    (void)button; // 避免未使用参数警告
+
     switch (button) {
     case 2: // 中键点击 - 打开音量控制
         if (getName() == "volume") {
@@ -106,50 +106,49 @@ void AudioModule::handleClick(uint64_t button) {
         break;
     case 3: // 右键点击 - 切换静音
         if (getName() == "volume") {
-            std::cerr << "Volume: Toggling mute via system command" << std::endl;
+            std::cerr << "Volume: Toggling mute via system command"
+                      << std::endl;
             int result = system("~/.bin/wm/volume t &");
-            std::cerr << "Volume: System command result: " << result << std::endl;
+            std::cerr << "Volume: System command result: " << result
+                      << std::endl;
         } else if (getName() == "microphone") {
-            std::cerr << "Microphone: Toggling mute via system command" << std::endl;
+            std::cerr << "Microphone: Toggling mute via system command"
+                      << std::endl;
             int result = system("~/.bin/wm/volume m t &");
-            std::cerr << "Microphone: System command result: " << result << std::endl;
+            std::cerr << "Microphone: System command result: " << result
+                      << std::endl;
         }
         // ALSA事件会自动触发update()，无需轮询
         break;
     case 4: // 上滚 - 增加音量
         if (getName() == "volume") {
-            std::cerr << "Volume: Increasing volume via system command" << std::endl;
+            std::cerr << "Volume: Increasing volume via system command"
+                      << std::endl;
             int result = system("~/.bin/wm/volume i &");
-            std::cerr << "Volume: System command result: " << result << std::endl;
+            std::cerr << "Volume: System command result: " << result
+                      << std::endl;
         } else if (getName() == "microphone") {
-            std::cerr << "Microphone: Increasing volume via system command" << std::endl;
+            std::cerr << "Microphone: Increasing volume via system command"
+                      << std::endl;
             int result = system("~/.bin/wm/volume m i &");
-            std::cerr << "Microphone: System command result: " << result << std::endl;
+            std::cerr << "Microphone: System command result: " << result
+                      << std::endl;
         }
-        // ALSA事件会自动触发update()，无需轮询
         break;
     case 5: // 下滚 - 减少音量
         if (getName() == "volume") {
-            std::cerr << "Volume: Decreasing volume via system command" << std::endl;
+            std::cerr << "Volume: Decreasing volume via system command"
+                      << std::endl;
             int result = system("~/.bin/wm/volume d &");
-            std::cerr << "Volume: System command result: " << result << std::endl;
+            std::cerr << "Volume: System command result: " << result
+                      << std::endl;
         } else if (getName() == "microphone") {
-            std::cerr << "Microphone: Decreasing volume via system command" << std::endl;
+            std::cerr << "Microphone: Decreasing volume via system command"
+                      << std::endl;
             int result = system("~/.bin/wm/volume m d &");
-            std::cerr << "Microphone: System command result: " << result << std::endl;
+            std::cerr << "Microphone: System command result: " << result
+                      << std::endl;
         }
-        // 使用轮询机制等待ALSA状态更新，最多等待50ms
-        for (int i = 0; i < 10; i++) { // 10次尝试，每次5ms
-            usleep(5000); // 5ms延迟
-            reloadMixer();
-            // 检查状态是否已经改变
-            int64_t current_volume = getVolume();
-            if (current_volume != previous_volume) {
-                break;
-            }
-        }
-        // 强制立即更新以反映状态变化
-        update();
         break;
     default:
         break;
@@ -159,7 +158,7 @@ void AudioModule::handleClick(uint64_t button) {
 std::string AudioModule::formatOutput(int64_t volume) {
     std::ostringstream output;
     output << getVolumeIcon(volume) << " ";
-    
+
     if (volume > 0) {
         if (volume < 10) {
             output << volume << "%";
@@ -167,7 +166,7 @@ std::string AudioModule::formatOutput(int64_t volume) {
             output << std::setw(2) << volume << "%";
         }
     }
-    
+
     return output.str();
 }
 
@@ -177,15 +176,15 @@ void AudioModule::reloadMixer() {
 }
 
 bool AudioModule::initializeMixer() {
-    snd_mixer_t* handle = nullptr;
+    snd_mixer_t *handle = nullptr;
     int err;
-    
+
     // 打开默认混音器
     if ((err = snd_mixer_open(&handle, 0)) < 0) {
         std::cerr << "无法打开混音器: " << snd_strerror(err) << std::endl;
         return false;
     }
-    
+
     // 加载混音器
     if ((err = snd_mixer_attach(handle, "default")) < 0 ||
         (err = snd_mixer_selem_register(handle, NULL, NULL)) < 0 ||
@@ -194,23 +193,23 @@ bool AudioModule::initializeMixer() {
         snd_mixer_close(handle);
         return false;
     }
-    
+
     // 查找混音器元素
-    snd_mixer_selem_id_t* sid;
+    snd_mixer_selem_id_t *sid;
     snd_mixer_selem_id_alloca(&sid);
     snd_mixer_selem_id_set_index(sid, 0);
     snd_mixer_selem_id_set_name(sid, element_name_.c_str());
-    
+
     mixer_elem_ = snd_mixer_find_selem(handle, sid);
     if (!mixer_elem_) {
         std::cerr << "未找到 " << element_name_ << " 控制元素" << std::endl;
         snd_mixer_close(handle);
         return false;
     }
-    
+
     // 保存混音器句柄
     mixer_handle_.reset(handle);
-    
+
     return true;
 }
 
@@ -233,35 +232,40 @@ int64_t VolumeModule::getVolume() {
         std::cerr << "Volume: Mixer handle or element is null" << std::endl;
         return -2;
     }
-    
+
     int unmuted = 1;
     if (snd_mixer_selem_has_playback_switch(mixer_elem_)) {
-        snd_mixer_selem_get_playback_switch(mixer_elem_, SND_MIXER_SCHN_FRONT_LEFT, &unmuted);
+        snd_mixer_selem_get_playback_switch(
+            mixer_elem_, SND_MIXER_SCHN_FRONT_LEFT, &unmuted
+        );
         std::cerr << "Volume: Playback switch state: " << unmuted << std::endl;
     } else {
         std::cerr << "Volume: No playback switch available" << std::endl;
     }
-    
+
     if (!unmuted) {
         std::cerr << "Volume: Muted, returning -1" << std::endl;
         return -1; // 静音
     }
-    
+
     int64_t min, max, volume;
     snd_mixer_selem_get_playback_volume_range(mixer_elem_, &min, &max);
-    snd_mixer_selem_get_playback_volume(mixer_elem_, SND_MIXER_SCHN_FRONT_LEFT, &volume);
-    
-    std::cerr << "Volume: min=" << min << ", max=" << max << ", raw=" << volume << std::endl;
-    
+    snd_mixer_selem_get_playback_volume(
+        mixer_elem_, SND_MIXER_SCHN_FRONT_LEFT, &volume
+    );
+
+    std::cerr << "Volume: min=" << min << ", max=" << max << ", raw=" << volume
+              << std::endl;
+
     // 转换为0-100范围
     if (max > min) {
         volume = (volume - min) * 100 / (max - min);
     } else {
         volume = 0;
     }
-    
+
     std::cerr << "Volume: Calculated percentage=" << volume << std::endl;
-    
+
     return (volume + 1) / 5; // 返回0-20范围的值，用于图标选择
 }
 
@@ -269,22 +273,24 @@ std::string VolumeModule::getVolumeIcon(int64_t volume) {
     if (volume == -1) {
         return "󰸈"; // 静音图标
     }
-    
+
     // 将0-20映射到图标索引
     size_t icon_index = 0;
     if (volume > 0) {
-        icon_index = std::min(static_cast<size_t>((volume + 4) / 5), volume_icons_.size() - 1);
+        icon_index = std::min(
+            static_cast<size_t>((volume + 4) / 5), volume_icons_.size() - 1
+        );
     }
-    
+
     return volume_icons_[icon_index];
 }
 
 std::string VolumeModule::formatOutput(int64_t volume) {
     std::ostringstream output;
     output << getVolumeIcon(volume) << " ";
-    
+
     if (volume > 0) {
-        int actual_volume = volume * 5; // 转换回0-100范围
+        int actual_volume = static_cast<int>(volume * 5); // 转换回0-100范围
         if (actual_volume < 10) {
             output << actual_volume << "%";
         } else if (actual_volume < 100) {
@@ -293,7 +299,7 @@ std::string VolumeModule::formatOutput(int64_t volume) {
             output << std::setw(3) << actual_volume << "%";
         }
     }
-    
+
     return output.str();
 }
 
@@ -305,35 +311,41 @@ int64_t MicrophoneModule::getVolume() {
         std::cerr << "Microphone: Mixer handle or element is null" << std::endl;
         return -2;
     }
-    
+
     int unmuted = 1;
     if (snd_mixer_selem_has_capture_switch(mixer_elem_)) {
-        snd_mixer_selem_get_capture_switch(mixer_elem_, SND_MIXER_SCHN_FRONT_LEFT, &unmuted);
-        std::cerr << "Microphone: Capture switch state: " << unmuted << std::endl;
+        snd_mixer_selem_get_capture_switch(
+            mixer_elem_, SND_MIXER_SCHN_FRONT_LEFT, &unmuted
+        );
+        std::cerr << "Microphone: Capture switch state: " << unmuted
+                  << std::endl;
     } else {
         std::cerr << "Microphone: No capture switch available" << std::endl;
     }
-    
+
     if (!unmuted) {
         std::cerr << "Microphone: Muted, returning -1" << std::endl;
         return -1; // 静音
     }
-    
+
     int64_t min, max, volume;
     snd_mixer_selem_get_capture_volume_range(mixer_elem_, &min, &max);
-    snd_mixer_selem_get_capture_volume(mixer_elem_, SND_MIXER_SCHN_FRONT_LEFT, &volume);
-    
-    std::cerr << "Microphone: min=" << min << ", max=" << max << ", raw=" << volume << std::endl;
-    
+    snd_mixer_selem_get_capture_volume(
+        mixer_elem_, SND_MIXER_SCHN_FRONT_LEFT, &volume
+    );
+
+    std::cerr << "Microphone: min=" << min << ", max=" << max
+              << ", raw=" << volume << std::endl;
+
     // 转换为0-100范围
     if (max > min) {
         volume = (volume - min) * 100 / (max - min);
     } else {
         volume = 0;
     }
-    
+
     std::cerr << "Microphone: Calculated percentage=" << volume << std::endl;
-    
+
     return (volume + 1) / 5; // 返回0-20范围的值，用于图标选择
 }
 
@@ -341,22 +353,24 @@ std::string MicrophoneModule::getVolumeIcon(int64_t volume) {
     if (volume == -1) {
         return "󰍭"; // 静音图标
     }
-    
+
     // 将0-20映射到图标索引
     size_t icon_index = 0;
     if (volume > 0) {
-        icon_index = std::min(static_cast<size_t>((volume + 4) / 5), microphone_icons_.size() - 1);
+        icon_index = std::min(
+            static_cast<size_t>((volume + 4) / 5), microphone_icons_.size() - 1
+        );
     }
-    
+
     return microphone_icons_[icon_index];
 }
 
 std::string MicrophoneModule::formatOutput(int64_t volume) {
     std::ostringstream output;
     output << getVolumeIcon(volume) << " ";
-    
+
     if (volume > 0) {
-        int actual_volume = volume * 5; // 转换回0-100范围
+        int actual_volume = static_cast<int>(volume * 5); // 转换回0-100范围
         if (actual_volume < 10) {
             output << actual_volume << "%";
         } else if (actual_volume < 100) {
@@ -365,6 +379,6 @@ std::string MicrophoneModule::formatOutput(int64_t volume) {
             output << std::setw(3) << actual_volume << "%";
         }
     }
-    
+
     return output.str();
 }

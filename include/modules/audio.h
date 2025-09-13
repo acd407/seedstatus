@@ -14,9 +14,9 @@ public:
     AudioModule(const AudioModule&) = delete;
     AudioModule& operator=(const AudioModule&) = delete;
     
-    // 允许移动操作
-    AudioModule(AudioModule&&) = default;
-    AudioModule& operator=(AudioModule&&) = default;
+    // 删除移动操作
+    AudioModule(AudioModule&&) = delete;
+    AudioModule& operator=(AudioModule&&) = delete;
     
     // 更新模块状态
     virtual void update() override;

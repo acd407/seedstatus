@@ -3,9 +3,7 @@
 #include <memory>
 #include <functional>
 #include <cstdint>
-#include <atomic>
 #include <chrono>
-#include <mutex>
 
 // 颜色定义
 enum class Color {
@@ -97,9 +95,8 @@ private:
     uint64_t interval_ = 0;
     uint64_t state_ = 0;
     int fd_ = -1;
-    std::atomic<bool> should_delete_{false};
+    volatile bool should_delete_ = false;
     std::chrono::steady_clock::time_point last_update_time_;
-    mutable std::mutex output_mutex_;
 };
 
 // 模块管理器
@@ -143,5 +140,4 @@ public:
     
 private:
     std::vector<std::shared_ptr<Module>> modules_;
-    mutable std::mutex modules_mutex_;
 };

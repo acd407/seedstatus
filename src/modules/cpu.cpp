@@ -20,7 +20,7 @@ void CpuModule::update() {
 
         // 选择图标 (使用vector代替数组，更现代且易于扩展)
         const std::vector<std::string> icons = {"󰾆", "󰾅", "󰓅"};
-        size_t icon_idx = icons.size() * usage / 101;
+        size_t icon_idx = static_cast<size_t>(static_cast<double>(icons.size()) * usage / 101);
         icon_idx = std::clamp(icon_idx, size_t(0), icons.size() - 1);
 
         // 构建输出字符串 (使用stringstream代替C风格的snprintf)
@@ -101,7 +101,7 @@ double CpuModule::getUsage() {
 
     double cpu_usage = 0.0;
     if (prev_total_ != 0 && total_diff != 0) {
-        cpu_usage = 100.0 * (total_diff - idle_diff) / total_diff;
+        cpu_usage = 100.0 * static_cast<double>(total_diff - idle_diff) / static_cast<double>(total_diff);
     }
 
     prev_idle_ = total_idle;
