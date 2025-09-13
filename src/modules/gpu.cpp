@@ -18,11 +18,11 @@ void GpuModule::update() {
     try {
         // 获取GPU使用率
         uint64_t usage = getGpuUsage();
-        
+
         // 构建输出字符串
         std::ostringstream output;
         output << "󰍹" << " ";
-        
+
         // 根据当前状态显示GPU使用率或显存占用
         if (show_vram_) {
             // 显示显存占用
@@ -35,7 +35,7 @@ void GpuModule::update() {
             output.width(usage < 100 ? 2 : 3);
             output << usage << "%";
         }
-        
+
         // 选择颜色
         Color color = Color::IDLE;
         if (usage >= 60) {
@@ -43,10 +43,10 @@ void GpuModule::update() {
         } else if (usage >= 30) {
             color = Color::WARNING;
         }
-        
+
         // 设置输出
         setOutput(output.str(), color);
-        
+
     } catch (const std::exception &e) {
         setOutput("󰍹 --.-", Color::DEACTIVE);
     }
@@ -73,16 +73,16 @@ uint64_t GpuModule::getVramUsed() {
     return Module::readUint64File(VRAM_USED);
 }
 
-void GpuModule::formatStorageUnits(char* buffer, uint64_t bytes) {
-    const char* units[] = {"B", "K", "M", "G", "T", "P", "E"};
+void GpuModule::formatStorageUnits(char *buffer, uint64_t bytes) {
+    const char *units[] = {"B", "K", "M", "G", "T", "P", "E"};
     size_t unit_idx = 0;
     double size = static_cast<double>(bytes);
-    
+
     while (size >= 1024.0 && unit_idx < sizeof(units) / sizeof(units[0]) - 1) {
         size /= 1024.0;
         unit_idx++;
     }
-    
+
     // 格式化为两位小数
     snprintf(buffer, 6, "%.2f%s", size, units[unit_idx]);
 }

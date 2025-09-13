@@ -32,8 +32,7 @@ class AlsaMixerWrapper {
         handle_.reset(raw_handle);
 
         if ((err = snd_mixer_attach(handle_.get(), "default")) < 0 ||
-            (err = snd_mixer_selem_register(handle_.get(), nullptr, nullptr)) <
-                0 ||
+            (err = snd_mixer_selem_register(handle_.get(), nullptr, nullptr)) < 0 ||
             (err = snd_mixer_load(handle_.get())) < 0) {
             std::cerr << "混音器初始化失败: " << snd_strerror(err) << std::endl;
             return false;
@@ -59,9 +58,7 @@ class AlsaMixerWrapper {
 
         int unmuted = 1;
         if (snd_mixer_selem_has_playback_switch(elem_)) {
-            snd_mixer_selem_get_playback_switch(
-                elem_, SND_MIXER_SCHN_FRONT_LEFT, &unmuted
-            );
+            snd_mixer_selem_get_playback_switch(elem_, SND_MIXER_SCHN_FRONT_LEFT, &unmuted);
         }
 
         if (!unmuted)
@@ -69,9 +66,7 @@ class AlsaMixerWrapper {
 
         int64_t min, max, volume;
         snd_mixer_selem_get_playback_volume_range(elem_, &min, &max);
-        snd_mixer_selem_get_playback_volume(
-            elem_, SND_MIXER_SCHN_FRONT_LEFT, &volume
-        );
+        snd_mixer_selem_get_playback_volume(elem_, SND_MIXER_SCHN_FRONT_LEFT, &volume);
 
         if (max > min) {
             volume = (volume - min) * 100 / (max - min);
@@ -88,9 +83,7 @@ class AlsaMixerWrapper {
 
         int unmuted = 1;
         if (snd_mixer_selem_has_capture_switch(elem_)) {
-            snd_mixer_selem_get_capture_switch(
-                elem_, SND_MIXER_SCHN_FRONT_LEFT, &unmuted
-            );
+            snd_mixer_selem_get_capture_switch(elem_, SND_MIXER_SCHN_FRONT_LEFT, &unmuted);
         }
 
         if (!unmuted)
@@ -98,9 +91,7 @@ class AlsaMixerWrapper {
 
         int64_t min, max, volume;
         snd_mixer_selem_get_capture_volume_range(elem_, &min, &max);
-        snd_mixer_selem_get_capture_volume(
-            elem_, SND_MIXER_SCHN_FRONT_LEFT, &volume
-        );
+        snd_mixer_selem_get_capture_volume(elem_, SND_MIXER_SCHN_FRONT_LEFT, &volume);
 
         if (max > min) {
             volume = (volume - min) * 100 / (max - min);
@@ -136,9 +127,7 @@ class AlsaMixerWrapper {
 };
 
 // 音量模块的图标定义
-const std::vector<std::string> VolumeModule::volume_icons_ = {
-    "󰕿", "󰖀", "󰕾", "󰝝"
-};
+const std::vector<std::string> VolumeModule::volume_icons_ = {"󰕿", "󰖀", "󰕾", "󰝝"};
 
 // 麦克风模块的图标定义
 const std::vector<std::string> MicrophoneModule::microphone_icons_ = {
@@ -146,11 +135,9 @@ const std::vector<std::string> MicrophoneModule::microphone_icons_ = {
 };
 
 // AudioModule基类实现
-AudioModule::AudioModule(
-    const std::string &name, const std::string &element_name
-)
-    : Module(name), mixer_handle_(nullptr, &snd_mixer_close),
-      element_name_(element_name), mixer_elem_(nullptr), mixer_fd_(-1),
+AudioModule::AudioModule(const std::string &name, const std::string &element_name)
+    : Module(name), mixer_handle_(nullptr, &snd_mixer_close), element_name_(element_name),
+      mixer_elem_(nullptr), mixer_fd_(-1),
       mixer_wrapper_(std::make_unique<AlsaMixerWrapper>(element_name)) {
     // 音频模块默认不基于时间间隔更新，而是基于ALSA事件
     setInterval(0);
@@ -173,11 +160,10 @@ void AudioModule::init() {
         if (fd >= 0) {
             mixer_fd_ = fd;
             setFd(mixer_fd_); // 设置文件描述符，System会将其添加到epoll
-            std::cerr << "AudioModule " << getName() << " registered fd "
-                      << mixer_fd_ << " for epoll" << std::endl;
+            std::cerr << "AudioModule " << getName() << " registered fd " << mixer_fd_
+                      << " for epoll" << std::endl;
         } else {
-            std::cerr << "Failed to get poll descriptors for " << getName()
-                      << std::endl;
+            std::cerr << "Failed to get poll descriptors for " << getName() << std::endl;
         }
     }
 }
@@ -320,9 +306,7 @@ std::string VolumeModule::getVolumeIcon(int64_t volume) {
     // 将0-20映射到图标索引
     size_t icon_index = 0;
     if (volume > 0) {
-        icon_index = std::min(
-            static_cast<size_t>((volume + 4) / 5), volume_icons_.size() - 1
-        );
+        icon_index = std::min(static_cast<size_t>((volume + 4) / 5), volume_icons_.size() - 1);
     }
 
     return volume_icons_[icon_index];
@@ -375,9 +359,7 @@ std::string MicrophoneModule::getVolumeIcon(int64_t volume) {
     // 将0-20映射到图标索引
     size_t icon_index = 0;
     if (volume > 0) {
-        icon_index = std::min(
-            static_cast<size_t>((volume + 4) / 5), microphone_icons_.size() - 1
-        );
+        icon_index = std::min(static_cast<size_t>((volume + 4) / 5), microphone_icons_.size() - 1);
     }
 
     return microphone_icons_[icon_index];

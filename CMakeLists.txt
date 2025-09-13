@@ -1,16 +1,49 @@
+# =============================================================================
+# SeedStatus - CMake 构建配置文件
+# =============================================================================
+# 
+# 本文件定义了SeedStatus项目的构建配置，包括：
+# - 项目基本信息和CMake版本要求
+# - C++标准和编译器设置
+# - 编译警告配置
+# - 构建类型和优化选项
+# - 依赖项管理
+# - 源文件收集和目标配置
+# 
+# 支持的构建类型：
+# - Debug: 调试版本，包含调试信息，优化级别为0
+# - Release: 发布版本，启用优化，不包含调试信息
+# - RelWithDebInfo: 带调试信息的发布版本
+# - MinSizeRel: 最小化体积的发布版本
+# 
+# 依赖项：
+# - nlohmann_json: JSON解析库
+# - sdbus-c++: D-Bus C++绑定
+# - ALSA: 音频系统库
+# 
+# =============================================================================
+
 cmake_minimum_required(VERSION 3.14)
 
-# 项目信息
+# =============================================================================
+# 项目基本信息
+# =============================================================================
+
+# 设置项目名称、版本和描述
 project(seedstatus
     VERSION 1.0.0
     DESCRIPTION "System status monitoring tool"
     LANGUAGES CXX
 )
 
-# C++标准设置
+# =============================================================================
+# C++标准和编译器设置
+# =============================================================================
+
+# 设置C++标准为C++20
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)  # 强制要求C++20标准
+set(CMAKE_CXX_EXTENSIONS OFF)        # 禁用编译器特定扩展
 
 # 启用编译命令导出（用于IDE和代码分析工具）
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -23,6 +56,10 @@ if(CCACHE_PROGRAM)
     set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PROGRAM})
 endif()
 
+
+# =============================================================================
+# 编译警告配置
+# =============================================================================
 
 # 基础警告选项 - 对项目代码启用基本警告检查
 set(PROJECT_BASE_WARNINGS
@@ -92,6 +129,10 @@ set(SYSTEM_WARNING_SUPPRESSION
 )
 
 
+# =============================================================================
+# 构建类型配置
+# =============================================================================
+
 # 设置默认构建类型（如果没有指定）
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
@@ -103,14 +144,14 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_compile_definitions(DEBUG=1)
     
     # Debug编译选项
-    add_compile_options(-g)
-    add_compile_options(-O0) # 禁用优化以便调试
+    add_compile_options(-g)           # 生成调试信息
+    add_compile_options(-O0)         # 禁用优化以便调试
     
     # 内存安全检查（Sanitizers）
     add_compile_options(
-        -fsanitize=address      # 地址消毒器
-        -fsanitize=undefined    # 未定义行为消毒器
-        -fsanitize=leak         # 内存泄漏消毒器
+        -fsanitize=address      # 地址消毒器，检测内存访问错误
+        -fsanitize=undefined    # 未定义行为消毒器，检测未定义行为
+        -fsanitize=leak         # 内存泄漏消毒器，检测内存泄漏
         -fno-omit-frame-pointer # 保留栈帧以便更好的错误报告
     )
     
@@ -119,8 +160,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 # Release模式配置
 else()
     message(STATUS "Configuring Release build")
-    add_compile_options(-O2)  # 优化级别2
-    add_compile_options(-DNDEBUG)  # 禁用调试代码
+    add_compile_options(-O2)          # 优化级别2，平衡性能和编译时间
+    add_compile_options(-DNDEBUG)     # 禁用调试代码
     
     # 可选的链接时优化（需要编译器支持）
     include(CheckIPOSupported)
@@ -135,20 +176,29 @@ endif()
 # 应用系统头文件警告抑制（全局生效）
 add_compile_options(${SYSTEM_WARNING_SUPPRESSION})
 
+# =============================================================================
+# 依赖项管理
+# =============================================================================
+
 # 查找现代CMake包
-find_package(nlohmann_json REQUIRED)
-find_package(sdbus-c++ REQUIRED)
+find_package(nlohmann_json REQUIRED)    # JSON解析库
+find_package(sdbus-c++ REQUIRED)        # D-Bus C++绑定
 
 # 查找系统包（使用pkg-config）
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(ALSA REQUIRED alsa)
-pkg_check_modules(DBUS REQUIRED dbus-1)
+find_package(PkgConfig REQUIRED)        # pkg-config工具
+pkg_check_modules(ALSA REQUIRED alsa)   # ALSA音频系统库
+pkg_check_modules(DBUS REQUIRED dbus-1) # D-Bus消息总线系统
+pkg_check_modules(SDBUS_CPP REQUIRED sdbus-c++)  # sdbus-c++库
+
+# =============================================================================
+# 源文件收集和目标配置
+# =============================================================================
 
 # 收集项目源文件
 file(GLOB_RECURSE PROJECT_SOURCES 
-    "src/*.cpp"
-    "src/*.h"
-    "src/*.hpp"
+    "src/*.cpp"    # C++源文件
+    "src/*.h"      # C头文件
+    "src/*.hpp"    # C++头文件
 )
 
 # 创建可执行文件目标
@@ -156,11 +206,11 @@ add_executable(seedstatus ${PROJECT_SOURCES})
 
 # 设置目标属性
 set_target_properties(seedstatus PROPERTIES
-    CXX_STANDARD 20
-    CXX_STANDARD_REQUIRED ON
-    CXX_EXTENSIONS OFF
-    OUTPUT_NAME "seedstatus"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    CXX_STANDARD 20                    # C++20标准
+    CXX_STANDARD_REQUIRED ON          # 强制要求C++20
+    CXX_EXTENSIONS OFF                # 禁用编译器特定扩展
+    OUTPUT_NAME "seedstatus"          # 输出文件名
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"  # 输出目录
 )
 
 # 配置包含目录
@@ -174,6 +224,7 @@ target_include_directories(seedstatus
     SYSTEM PUBLIC 
         ${ALSA_INCLUDE_DIRS}
         ${DBUS_INCLUDE_DIRS}
+        ${SDBUS_CPP_INCLUDE_DIRS}
 )
 
 # 应用项目特定的编译警告选项
@@ -186,6 +237,7 @@ target_compile_options(seedstatus PRIVATE
 # 链接依赖库
 target_link_libraries(seedstatus PRIVATE 
     nlohmann_json::nlohmann_json
+    ${SDBUS_CPP_LIBRARIES}
     ${ALSA_LIBRARIES}
     ${DBUS_LIBRARIES}
 )
@@ -200,5 +252,23 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     )
 endif()
 
-# 安装目标
+# =============================================================================
+# 安装配置
+# =============================================================================
+
+# 安装可执行文件到bin目录
 install(TARGETS seedstatus DESTINATION bin)
+
+# =============================================================================
+# 调试和开发辅助
+# =============================================================================
+
+# 输出构建信息
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
+message(STATUS "C++ standard: ${CMAKE_CXX_STANDARD}")
+message(STATUS "Install prefix: ${CMAKE_INSTALL_PREFIX}")
+
+# =============================================================================
+# 结束
+# =============================================================================

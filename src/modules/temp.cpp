@@ -47,18 +47,14 @@ double TempModule::getTemperature() const {
     std::ifstream file(temp_file);
 
     if (!file.is_open()) {
-        throw std::runtime_error(
-            "Failed to open temperature file: " + temp_file
-        );
+        throw std::runtime_error("Failed to open temperature file: " + temp_file);
     }
 
     uint64_t temp_raw;
     file >> temp_raw;
 
     if (!file) {
-        throw std::runtime_error(
-            "Failed to read temperature from file: " + temp_file
-        );
+        throw std::runtime_error("Failed to read temperature from file: " + temp_file);
     }
 
     // 将温度值从毫摄氏度转换为摄氏度

@@ -6,13 +6,9 @@
 #include <iostream>
 #include <stdexcept>
 
-
-
 System::System() = default;
 
 System::~System() = default;
-
-
 
 bool System::initialize() {
     try {
@@ -41,7 +37,7 @@ bool System::initialize() {
 
         running_ = true;
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::cerr << "System initialization failed: " << e.what() << std::endl;
         epoll_fd_wrapper_.reset();
         return false;
@@ -73,7 +69,7 @@ void System::run() {
         // 处理所有事件
         try {
             handleEvents(events, nfds);
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             std::cerr << "Error handling events: " << e.what() << std::endl;
         }
 
@@ -112,7 +108,7 @@ void System::addModule(std::shared_ptr<Module> module) {
 
         // 立即更新一次
         module->update();
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::cerr << "Failed to add module " << module->getName() << ": " << e.what() << std::endl;
         throw;
     }
@@ -122,7 +118,7 @@ bool System::addToEpoll(int fd, std::shared_ptr<Module> module) {
     if (fd < 0) {
         return false;
     }
-    
+
     struct epoll_event ev{};
     ev.events = EPOLLIN | EPOLLET;
 
@@ -141,9 +137,10 @@ bool System::removeFromEpoll(int fd) {
     if (fd < 0) {
         return false;
     }
-    
+
     if (epoll_ctl(epoll_fd_wrapper_.get(), EPOLL_CTL_DEL, fd, nullptr) == -1) {
-        std::cerr << "Failed to remove fd " << fd << " from epoll: " << strerror(errno) << std::endl;
+        std::cerr << "Failed to remove fd " << fd << " from epoll: " << strerror(errno)
+                  << std::endl;
         return false;
     }
 
@@ -164,7 +161,7 @@ bool System::createEpoll() {
         std::cerr << "Failed to create epoll instance: " << strerror(errno) << std::endl;
         return false;
     }
-    
+
     epoll_fd_wrapper_.reset(fd);
     return true;
 }
@@ -182,14 +179,14 @@ void System::initializeModules() {
     // 添加Stdin模块，用于处理点击事件
     addModule(std::make_shared<StdinModule>(this));
     // 按照指定顺序初始化模块
-    addModule(std::make_shared<BatteryModule>()); // Battery Status
-    addModule(std::make_shared<BacklightModule>()); // Backlight Control
+    addModule(std::make_shared<BatteryModule>());    // Battery Status
+    addModule(std::make_shared<BacklightModule>());  // Backlight Control
     addModule(std::make_shared<MicrophoneModule>()); // Microphone Control
-    addModule(std::make_shared<VolumeModule>()); // Volume Control
-    addModule(std::make_shared<NetworkModule>()); // Network Status
-    addModule(std::make_shared<GpuModule>()); // GPU Usage
-    addModule(std::make_shared<MemoryModule>()); // Memory Usage
-    auto p = std::make_shared<CpuModule>(); // CPU Power
+    addModule(std::make_shared<VolumeModule>());     // Volume Control
+    addModule(std::make_shared<NetworkModule>());    // Network Status
+    addModule(std::make_shared<GpuModule>());        // GPU Usage
+    addModule(std::make_shared<MemoryModule>());     // Memory Usage
+    auto p = std::make_shared<CpuModule>();          // CPU Power
     p->setState(1);
     addModule(p);
     addModule(std::make_shared<CpuModule>()); // CPU Usage

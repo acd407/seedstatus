@@ -79,17 +79,15 @@ double CpuModule::getUsage() {
 
     std::string line;
     if (!std::getline(file, line)) {
-        throw std::runtime_error(
-            "Failed to read from " + std::string(PROC_STAT)
-        );
+        throw std::runtime_error("Failed to read from " + std::string(PROC_STAT));
     }
 
     file.close();
 
     uint64_t idx, nice, system, idle, iowait, irq, softirq;
     if (sscanf(
-            line.c_str(), "cpu %lu %lu %lu %lu %lu %lu %lu", &idx, &nice,
-            &system, &idle, &iowait, &irq, &softirq
+            line.c_str(), "cpu %lu %lu %lu %lu %lu %lu %lu", &idx, &nice, &system, &idle, &iowait,
+            &irq, &softirq
         ) != 7) {
         throw std::runtime_error("Failed to parse CPU stats");
     }
@@ -101,7 +99,8 @@ double CpuModule::getUsage() {
 
     double cpu_usage = 0.0;
     if (prev_total_ != 0 && total_diff != 0) {
-        cpu_usage = 100.0 * static_cast<double>(total_diff - idle_diff) / static_cast<double>(total_diff);
+        cpu_usage =
+            100.0 * static_cast<double>(total_diff - idle_diff) / static_cast<double>(total_diff);
     }
 
     prev_idle_ = total_idle;
@@ -120,8 +119,7 @@ double CpuModule::getPower() {
         }
 
         uint64_t energy_diff = energy - prev_energy_;
-        double power =
-            static_cast<double>(energy_diff) / 1e6; // 转换为焦耳/秒（瓦）
+        double power = static_cast<double>(energy_diff) / 1e6; // 转换为焦耳/秒（瓦）
 
         prev_energy_ = energy;
         return power;

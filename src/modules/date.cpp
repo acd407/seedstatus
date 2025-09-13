@@ -7,17 +7,16 @@ DateModule::DateModule() : Module("date") {
     setInterval(1);
 }
 
-DateModule::~DateModule() {
-}
+DateModule::~DateModule() {}
 
 void DateModule::update() {
     time_t raw_time;
-    time(&raw_time); // 获取当前时间戳
-    struct tm* time_info = localtime(&raw_time); // 转换为本地时间
-    
+    time(&raw_time);                             // 获取当前时间戳
+    struct tm *time_info = localtime(&raw_time); // 转换为本地时间
+
     char output_str[80];
     strftime(output_str, sizeof(output_str), "%a\u2004%m/%d\u2004%H:%M:%S", time_info);
-    
+
     setOutput(output_str, Color::IDLE);
 }
 

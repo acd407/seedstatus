@@ -19,7 +19,7 @@ bool Timer::initialize(int epoll_fd) {
         if (fd == -1) {
             return false;
         }
-        
+
         timer_fd_wrapper_.reset(fd);
 
         // 设置定时器
@@ -36,7 +36,7 @@ bool Timer::initialize(int epoll_fd) {
         }
 
         return true;
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::cerr << "Timer initialization failed: " << e.what() << std::endl;
         timer_fd_wrapper_.reset();
         return false;
@@ -55,15 +55,15 @@ void Timer::addIntervalModule(std::shared_ptr<Module> module) {
     if (!module) {
         throw std::invalid_argument("Module cannot be null");
     }
-    
+
     interval_modules_.push_back(module);
 }
 
-void Timer::removeModule(const std::shared_ptr<Module>& module) {
+void Timer::removeModule(const std::shared_ptr<Module> &module) {
     if (!module) {
         return;
     }
-    
+
     auto it = std::remove(interval_modules_.begin(), interval_modules_.end(), module);
     interval_modules_.erase(it, interval_modules_.end());
 }
@@ -78,19 +78,20 @@ void Timer::handleTimerEvent() {
 
             // 更新所有需要按时间间隔更新的模块
             for (const auto &module : interval_modules_) {
-                if (!module) continue;
-                
+                if (!module)
+                    continue;
+
                 try {
-                    if (module->getInterval() > 0 &&
-                        current_counter % module->getInterval() == 0) {
+                    if (module->getInterval() > 0 && current_counter % module->getInterval() == 0) {
                         module->update();
                     }
-                } catch (const std::exception& e) {
-                    std::cerr << "Error updating module " << module->getName() << ": " << e.what() << std::endl;
+                } catch (const std::exception &e) {
+                    std::cerr << "Error updating module " << module->getName() << ": " << e.what()
+                              << std::endl;
                 }
             }
         }
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::cerr << "Error in handleTimerEvent: " << e.what() << std::endl;
     } catch (...) {
         std::cerr << "Unknown error in handleTimerEvent" << std::endl;
@@ -113,7 +114,7 @@ bool Timer::setInterval(uint64_t seconds) {
     if (seconds == 0) {
         return false;
     }
-    
+
     struct itimerspec new_value{};
     new_value.it_value.tv_sec = static_cast<time_t>(seconds);
     new_value.it_value.tv_nsec = 0;
@@ -124,7 +125,7 @@ bool Timer::setInterval(uint64_t seconds) {
         std::cerr << "Failed to set timer interval: " << strerror(errno) << std::endl;
         return false;
     }
-    
+
     return true;
 }
 

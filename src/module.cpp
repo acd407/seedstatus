@@ -99,9 +99,7 @@ std::string Module::toJson() const {
         j["color"] = color_;
         return j.dump();
     } catch (const std::exception &e) {
-        throw std::runtime_error(
-            "Failed to create JSON string: " + std::string(e.what())
-        );
+        throw std::runtime_error("Failed to create JSON string: " + std::string(e.what()));
     }
 }
 
@@ -115,9 +113,7 @@ bool Module::needsUpdate() const {
     }
 
     const auto now = std::chrono::steady_clock::now();
-    const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
-        now - last_update_time_
-    );
+    const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - last_update_time_);
     return elapsed.count() >= static_cast<int64_t>(interval_);
 }
 
@@ -162,8 +158,7 @@ std::shared_ptr<Module> ModuleManager::getModule(size_t index) const {
     return modules_[index];
 }
 
-std::shared_ptr<Module>
-ModuleManager::getModuleByName(const std::string &name) const {
+std::shared_ptr<Module> ModuleManager::getModuleByName(const std::string &name) const {
     for (const auto &module : modules_) {
         if (module->getName() == name) {
             return module;
@@ -173,12 +168,10 @@ ModuleManager::getModuleByName(const std::string &name) const {
 }
 
 void ModuleManager::removeMarkedModules() {
-    auto it = std::remove_if(
-        modules_.begin(), modules_.end(),
-        [](const std::shared_ptr<Module> &module) {
+    auto it =
+        std::remove_if(modules_.begin(), modules_.end(), [](const std::shared_ptr<Module> &module) {
             return module->shouldDelete();
-        }
-    );
+        });
     modules_.erase(it, modules_.end());
 }
 
@@ -199,8 +192,8 @@ void ModuleManager::outputModules() const {
             try {
                 output = module->getOutput();
             } catch (const std::exception &e) {
-                std::cerr << "Error getting output from module "
-                          << module->getName() << ": " << e.what() << std::endl;
+                std::cerr << "Error getting output from module " << module->getName() << ": "
+                          << e.what() << std::endl;
                 continue;
             }
 
@@ -213,15 +206,13 @@ void ModuleManager::outputModules() const {
                     std::cout << module->toJson();
 
                     // 添加空格分隔符
-                    std::cout
-                        << ",{\"full_text\":\" "
-                           "\",\"separator\":false,\"separator_block_width\":0,"
-                           "\"markup\":\"pango\"}";
+                    std::cout << ",{\"full_text\":\" "
+                                 "\",\"separator\":false,\"separator_block_width\":0,"
+                                 "\"markup\":\"pango\"}";
                     first = false;
                 } catch (const std::exception &e) {
-                    std::cerr << "Error generating JSON for module "
-                              << module->getName() << ": " << e.what()
-                              << std::endl;
+                    std::cerr << "Error generating JSON for module " << module->getName() << ": "
+                              << e.what() << std::endl;
                 }
             }
         }
