@@ -1,3 +1,4 @@
+#include <cmath>
 #include <modules/cpu.h>
 #include <iostream>
 #include <fstream>
@@ -15,8 +16,10 @@ CpuModule::~CpuModule() {}
 
 void CpuModule::update() {
     try {
+        rapl_max_energy_range_ = readUint64File(RAPL_MAX_ENERGY_RANGE);
         // 获取CPU使用率
         double usage = getUsage();
+        usage = std::floor(usage * 100) / 100;
 
         // 选择图标 (使用vector代替数组，更现代且易于扩展)
         const std::vector<std::string> icons = {"󰾆", "󰾅", "󰓅"};
@@ -31,6 +34,7 @@ void CpuModule::update() {
         if (getState()) {
             // 显示功率
             double power = getPower();
+            power = std::floor(power * 100) / 100;
             output.precision(power < 10 ? 2 : 1);
             output << std::fixed << power << "W";
         } else {
@@ -118,7 +122,12 @@ double CpuModule::getPower() {
             return 0.0;
         }
 
-        uint64_t energy_diff = energy - prev_energy_;
+        uint64_t energy_diff = 0;
+        if (energy >= prev_energy_) {
+            energy_diff = energy - prev_energy_;
+        } else {
+            energy_diff = (rapl_max_energy_range_ - prev_energy_ + 1) + energy;
+        }
         double power = static_cast<double>(energy_diff) / 1e6; // 转换为焦耳/秒（瓦）
 
         prev_energy_ = energy;
